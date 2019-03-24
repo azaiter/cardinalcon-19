@@ -396,41 +396,62 @@ HTML(TopPlayers.head().to_html(escape=0, formatters={"Photo":path_to_image_html,
 BottomPlayers = df.sort_values(by=['Overall', 'Total Stats'], ascending=True)
 HTML(BottomPlayers.head().to_html(escape=0, formatters={"Photo":path_to_image_html, "Flag":path_to_image_html, "Club Logo":path_to_image_html}))
 
+# Figure out the correlations
+df.corr()[['Wage']].sort_values('Wage')
+
+# build predictors
+predictors = ["Stats Addtion", "Overall", "Age", "Weak Foot", "Weight", "Height", "Reactions", "Center Midfielder"]
+df2 = df[["Wage"] + predictors]
+import matplotlib  
+import matplotlib.pyplot as plt  
+import numpy as np
+
+# %matplotlib inline
+
+# manually set the parameters of the figure to and appropriate size
+plt.rcParams['figure.figsize'] = [16, 22]
+
+# call subplots specifying the grid structure we desire and that 
+# the y axes should be shared
+fig, axes = plt.subplots(nrows=4, ncols=2, sharey=True)
+
+# Since it would be nice to loop through the features in to build this plot
+# let us rearrange our data into a 2D array of 6 rows and 3 columns
+arr = np.array(predictors).reshape(4, 2)
+
+# use enumerate to loop over the arr 2D array of rows and columns
+# and create scatter plots of each meantempm vs each feature
+for row, col_arr in enumerate(arr):  
+    for col, feature in enumerate(col_arr):
+        axes[row, col].scatter(df2[feature], df2["Wage"])
+        if col == 0:
+            axes[row, col].set(xlabel=feature, ylabel="Wage")
+        else:
+            axes[row, col].set(xlabel=feature)
+plt.show()
+
 """### Predicting Player Stats Using Supplied Information"""
 
 # Give us your info:
-Name = "CardinalCon Man"
-Age = 25
-Nationality = "Brazil"
-PreferredFoot = "Right"
-Position = "ST"
+Age = 29
 Height = 72.0
-Weight = 185
-Club = "FC Barcelona"
-BodyType = "Lean"
-JerseyNumber = 10.0
-rowToAdd = {
-    "Unnamed: 0": 11111,
-    "ID": 11111,
-    "Name": Name,
-    "Age": Age,
-    "Nationality": Nationality,
-    "Club": Club,
-    "Preferred Foot": PreferredFoot,
-    "Work Rate": "Medium\\/ Medium",
-    "Body Type": BodyType,
-    "Position": Position,
-    "Jersey Number": JerseyNumber,
-    "Joined": "Jul 1, 2004",
-    "Loaned From": "None",
-    "Contract Valid Until": "2021",
-    "Height": Height,
-    "Weight": Weight
-}
-dfCopy = df
-dfCopy = dfCopy.append(rowToAdd , ignore_index=True)
-dfCopy = dfCopy.interpolate(method ='linear', limit_direction ='forward')
-dfCopy.loc[dfCopy["Name"] == "CardinalCon Man"]
+Weight = 175
+StatsAddtion = 3
+Overall = 91
+WeakFoot = 3
+Reactions = 86
+
+# build calculation model
+d1 = df.loc[(df["Stats Addtion"] > StatsAddtion-1) & (df["Stats Addtion"] < StatsAddtion+1)]["Wage"].mean()
+d2 = df.loc[(df["Overall"] > Overall-3) & (df["Overall"] < Overall+3)]["Wage"].mean()
+d3 = df.loc[(df["Age"] > Age-2) & (df["Age"] < Age+2)]["Wage"].mean()
+d4 = df.loc[(df["Weak Foot"] > WeakFoot-1) & (df["Weak Foot"] < WeakFoot+1)]["Weak Foot"].mean()
+d5 = df.loc[(df["Weight"] > Weight-10) & (df["Weight"] < Weight+10)]["Wage"].mean()
+d6 = df.loc[(df["Height"] > Height-3) & (df["Height"] < Height+3)]["Wage"].mean()
+d7 = df.loc[(df["Reactions"] > Reactions-4) & (df["Reactions"] < Reactions+4)]["Wage"].mean()
+
+# get the avg of salary and print it
+print("Your Salary Would Be: ${:0.2f}".format((d1+d2+d3+d4+d5+d6+d7)/7))
 
 """##Heatmaps
 
